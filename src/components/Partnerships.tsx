@@ -33,7 +33,9 @@ const Partnerships = () => {
         if (!path) return '/placeholder.svg';
         if (path.startsWith('http')) return path;
         const BASE_URL = import.meta.env.VITE_DJANGO_API_URL || 'http://127.0.0.1:8000';
-        return `${BASE_URL.replace('/api', '')}/${path}`;
+        const cleanBase = BASE_URL.replace('/api', '');
+        const cleanPath = path.startsWith('/') ? path : `/${path}`;
+        return `${cleanBase}${cleanPath}`;
     };
 
     // Filter active partners and sort by priority
