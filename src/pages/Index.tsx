@@ -27,6 +27,7 @@ import Hero from "@/components/Hero";
 import Partnerships from "@/components/Partnerships";
 import AboutUs from "@/components/AboutUs";
 import PrivacyPolicy from "@/components/PrivacyPolicy";
+import TermsOfService from "@/components/TermsOfService";
 import Footer from "@/components/Footer";
 
 /**
@@ -74,6 +75,7 @@ const Index = () => {
       <Partnerships />
       <AboutUs />
       <PrivacyPolicy />
+      <TermsOfService />
       <Footer />
     </div>
   );
