@@ -8,11 +8,7 @@ export const partnerService = {
   },
   
   async getPartnerById(id: string): Promise<Partner> {
-    const partners = await this.getPartners();
-    const partner = partners.find(p => p.partenaire_id === id || p.id?.toString() === id);
-    if (!partner) {
-      throw new Error('Partner not found');
-    }
-    return partner;
+    const response = await apiClient.get<{ data: Partner }>(`/home/partenaire/${id}/`);
+    return response.data;
   },
 };
