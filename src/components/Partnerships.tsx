@@ -9,7 +9,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useTranslation } from "@/contexts/TranslationContext";
-import { partnersData } from "@/data/partnersData";
+import { usePartners } from "@/hooks/usePartners";
 
 /**
  * @component Partnerships
@@ -17,7 +17,58 @@ import { partnersData } from "@/data/partnersData";
  */
 const Partnerships = () => {
     // Hook to get the translation function.
-    const { t } = useTranslation();
+    const { t, language } = useTranslation();
+    const { data: partners, isLoading } = usePartners();
+
+    type TranslatableField = { fr: string; ar: string; en: string; } | undefined;
+    type Language = 'en' | 'fr' | 'ar';
+
+    const getTranslated = (field: TranslatableField) => {
+        if (!field) return '';
+        return field[language as Language] || field['en'] || '';
+    };
+
+    // Filter active partners and sort by priority
+    const activePartners = partners
+        ?.filter(partner => partner.actif !== false)
+        ?.sort((a, b) => (a.priorite_affichage || 0) - (b.priorite_affichage || 0)) || [];
+
+    if (isLoading) {
+        return (
+            <section id="partnerships" className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
+                <div className="max-w-7xl mx-auto">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                            {t("partnerships.title")}
+                        </h2>
+                        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                            {t("partnerships.subtitle")}
+                        </p>
+                    </div>
+                    <div className="flex items-center justify-center py-12">
+                        <div className="animate-pulse text-muted-foreground">Loading partners...</div>
+                    </div>
+                </div>
+            </section>
+        );
+    }
+
+    if (!activePartners || activePartners.length === 0) {
+        return (
+            <section id="partnerships" className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
+                <div className="max-w-7xl mx-auto">
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                            {t("partnerships.title")}
+                        </h2>
+                        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                            {t("partnerships.subtitle")}
+                        </p>
+                    </div>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <section id="partnerships" className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
@@ -46,33 +97,38 @@ const Partnerships = () => {
 
                     {/* The scrolling container. The `animate-scroll-infinite` class applies the infinite scroll animation. */}
                     <div className="flex w-max gap-6 animate-scroll-infinite">
-                        {/* The partnersData array is duplicated to create a seamless loop. */}
-                        {[...partnersData, ...partnersData].map((partner, index) => (
-                            <Link
-                                key={`${partner.id}-${index}`}
-                                to={`/partner/${partner.id}`}
-                                className="flex-shrink-0"
-                            >
-                                {/* Animated partner logo card with hover effects. */}
-                                <motion.div
-                                    className="group relative cursor-pointer"
-                                    whileHover={{ y: -4 }}
-                                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        {/* The activePartners array is duplicated to create a seamless loop. */}
+                        {[...activePartners, ...activePartners].map((partner, index) => {
+                            const partnerId = partner.partenaire_id || partner.id?.toString();
+                            const partnerName = getTranslated(partner.nom_partenaire);
+                            
+                            return (
+                                <Link
+                                    key={`${partnerId}-${index}`}
+                                    to={`/partner/${partnerId}`}
+                                    className="flex-shrink-0"
                                 >
-                                    {/* A blurred gradient that appears on hover for a glowing effect. */}
-                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent opacity-0 group-hover:opacity-100 rounded-xl blur-xl transition-opacity duration-500" />
-                                    <div className="relative flex items-center justify-center w-48 h-32 border border-border/50 rounded-xl bg-background/80 backdrop-blur-md transition-all duration-300 overflow-hidden">
-                                        {/* A subtle gradient overlay that appears on hover. */}
-                                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                                        <img
-                                            src={partner.logo}
-                                            alt={partner.name}
-                                            className="w-40 h-24 object-contain relative z-10 transition-all duration-300"
-                                        />
-                                    </div>
-                                </motion.div>
-                            </Link>
-                        ))}
+                                    {/* Animated partner logo card with hover effects. */}
+                                    <motion.div
+                                        className="group relative cursor-pointer"
+                                        whileHover={{ y: -4 }}
+                                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                    >
+                                        {/* A blurred gradient that appears on hover for a glowing effect. */}
+                                        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent opacity-0 group-hover:opacity-100 rounded-xl blur-xl transition-opacity duration-500" />
+                                        <div className="relative flex items-center justify-center w-48 h-32 border border-border/50 rounded-xl bg-background/80 backdrop-blur-md transition-all duration-300 overflow-hidden">
+                                            {/* A subtle gradient overlay that appears on hover. */}
+                                            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                            <img
+                                                src={partner.logo}
+                                                alt={partnerName}
+                                                className="w-40 h-24 object-contain relative z-10 transition-all duration-300"
+                                            />
+                                        </div>
+                                    </motion.div>
+                                </Link>
+                            );
+                        })}
                     </div>
                 </div>
             </div>
