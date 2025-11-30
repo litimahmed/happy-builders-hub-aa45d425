@@ -1,28 +1,17 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Clock, ArrowLeft, Send, Printer } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, ArrowLeft, Printer, Globe, Facebook, Instagram, Linkedin, Twitter } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTranslation } from "@/contexts/TranslationContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { toast } from "sonner";
 import { useContactInfo } from "@/hooks/useContactInfo";
-import { contactService } from "@/services/contactService";
+import { TbBrandTiktok } from "react-icons/tb";
 
 const ContactUsPage = () => {
     const { t, language } = useTranslation();
     const { data: apiData, isLoading } = useContactInfo();
-    const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        subject: "",
-        message: "",
-    });
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
     type TranslatableField = { fr: string; ar: string; en: string; } | undefined;
     type Language = 'en' | 'fr' | 'ar';
@@ -32,63 +21,25 @@ const ContactUsPage = () => {
         return field[language as Language] || field['en'] || '';
     };
 
-    const contactInfo = [
-        {
-            icon: Mail,
-            title: t("contact.email"),
-            value: apiData?.email || "contact@toorrii.com",
-            color: "text-primary",
-        },
-        {
-            icon: Phone,
-            title: t("contact.phone"),
-            value: (
-                <div className="flex flex-col items-center">
-                    {apiData?.telephone_1 && <span>{apiData.telephone_1}</span>}
-                    {apiData?.telephone_2 && <span>{apiData.telephone_2}</span>}
+    const socialLinks = [
+        { icon: Facebook, url: apiData?.facebook, label: "Facebook", color: "hover:text-[#1877f2]" },
+        { icon: Instagram, url: apiData?.instagram, label: "Instagram", color: "hover:text-[#e4405f]" },
+        { icon: Linkedin, url: apiData?.linkedin, label: "LinkedIn", color: "hover:text-[#0a66c2]" },
+        { icon: Twitter, url: apiData?.x, label: "X (Twitter)", color: "hover:text-foreground" },
+        { icon: TbBrandTiktok, url: apiData?.tiktok, label: "TikTok", color: "hover:text-foreground" },
+    ].filter(link => link.url);
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-background" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                <Header />
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="animate-pulse text-muted-foreground">Loading...</div>
                 </div>
-            ),
-            color: "text-secondary",
-        },
-        {
-            icon: Printer,
-            title: "Fax",
-            value: apiData?.telephone_fixe,
-            color: "text-primary",
-        },
-        {
-            icon: MapPin,
-            title: t("contact.location"),
-            value: apiData?.adresse ? `${getTranslated(apiData.adresse)}, ${getTranslated(apiData.ville)}` : "Algiers, Algeria",
-            color: "text-primary",
-        },
-        {
-            icon: Clock,
-            title: t("contact.hours"),
-            value: apiData?.horaires || t("contact.hoursValue"),
-            color: "text-secondary",
-        },
-    ];
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        try {
-            await contactService.sendContactMessage(formData);
-            toast.success(t("contactPage.successMessage"));
-            setFormData({ name: "", email: "", subject: "", message: "" });
-        } catch (error) {
-            toast.error(t("contactPage.errorMessage") || "Failed to send message. Please try again.");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-    ) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+                <Footer />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-background" dir={language === 'ar' ? 'rtl' : 'ltr'}>
@@ -114,115 +65,206 @@ const ContactUsPage = () => {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-center mb-16"
+                        className="text-center mb-12"
                     >
-                        <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                            {t("contact.title")}
+                        <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+                            {apiData?.titre ? getTranslated(apiData.titre) : t("contact.title")}
                         </h1>
-                        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                            {t("contact.subtitle")}
-                        </p>
+                        {apiData?.message_acceuil && (
+                            <p className="text-muted-foreground text-xl max-w-3xl mx-auto leading-relaxed">
+                                {getTranslated(apiData.message_acceuil)}
+                            </p>
+                        )}
                     </motion.div>
 
-                    {/* Contact Info Cards */}
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-                        {contactInfo.map((info, index) => (
+                    <div className="grid lg:grid-cols-2 gap-12 mb-16">
+                        {/* Left Column - Contact Info Cards */}
+                        <div className="space-y-6">
                             <motion.div
-                                key={info.title}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.1 }}
                             >
-                                <Card className="h-full hover:shadow-card transition-shadow">
-                                    <CardContent className="pt-6 text-center">
-                                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                                            <info.icon className={`w-6 h-6 ${info.color}`} />
+                                <Card className="overflow-hidden border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg">
+                                    <CardContent className="p-8">
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
+                                                <Mail className="w-7 h-7 text-primary" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="font-bold text-lg mb-2">{t("contact.email")}</h3>
+                                                <a href={`mailto:${apiData?.email}`} className="text-muted-foreground hover:text-primary transition-colors text-lg">
+                                                    {apiData?.email}
+                                                </a>
+                                            </div>
                                         </div>
-                                        <h3 className="font-semibold mb-2">{info.title}</h3>
-                                        <p className="text-sm text-muted-foreground">{info.value}</p>
                                     </CardContent>
                                 </Card>
                             </motion.div>
-                        ))}
+
+                            <motion.div
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.2 }}
+                            >
+                                <Card className="overflow-hidden border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg">
+                                    <CardContent className="p-8">
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
+                                                <Phone className="w-7 h-7 text-primary" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="font-bold text-lg mb-3">{t("contact.phone")}</h3>
+                                                <div className="space-y-2">
+                                                    {apiData?.telephone_1 && (
+                                                        <a href={`tel:${apiData.telephone_1}`} className="block text-muted-foreground hover:text-primary transition-colors text-lg">
+                                                            {apiData.telephone_1}
+                                                        </a>
+                                                    )}
+                                                    {apiData?.telephone_2 && (
+                                                        <a href={`tel:${apiData.telephone_2}`} className="block text-muted-foreground hover:text-primary transition-colors text-lg">
+                                                            {apiData.telephone_2}
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+
+                            {apiData?.telephone_fixe && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.3 }}
+                                >
+                                    <Card className="overflow-hidden border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg">
+                                        <CardContent className="p-8">
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
+                                                    <Printer className="w-7 h-7 text-primary" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h3 className="font-bold text-lg mb-2">Fax</h3>
+                                                    <a href={`tel:${apiData.telephone_fixe}`} className="text-muted-foreground hover:text-primary transition-colors text-lg">
+                                                        {apiData.telephone_fixe}
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
+                            )}
+
+                            {apiData?.site_web && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.4 }}
+                                >
+                                    <Card className="overflow-hidden border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg">
+                                        <CardContent className="p-8">
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
+                                                    <Globe className="w-7 h-7 text-primary" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h3 className="font-bold text-lg mb-2">Website</h3>
+                                                    <a href={apiData.site_web} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors text-lg">
+                                                        {apiData.site_web}
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
+                            )}
+                        </div>
+
+                        {/* Right Column - Location & Hours */}
+                        <div className="space-y-6">
+                            <motion.div
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.1 }}
+                            >
+                                <Card className="overflow-hidden border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg h-full">
+                                    <CardContent className="p-8">
+                                        <div className="flex items-start gap-4 mb-6">
+                                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
+                                                <MapPin className="w-7 h-7 text-primary" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="font-bold text-lg mb-2">{t("contact.location")}</h3>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3 text-muted-foreground ml-[72px]">
+                                            {apiData?.adresse && (
+                                                <p className="text-lg leading-relaxed">{getTranslated(apiData.adresse)}</p>
+                                            )}
+                                            {apiData?.ville && apiData?.wilaya && (
+                                                <p className="text-lg">
+                                                    {getTranslated(apiData.ville)}, {getTranslated(apiData.wilaya)}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+
+                            <motion.div
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.2 }}
+                            >
+                                <Card className="overflow-hidden border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg">
+                                    <CardContent className="p-8">
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
+                                                <Clock className="w-7 h-7 text-primary" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="font-bold text-lg mb-2">{t("contact.hours")}</h3>
+                                                <p className="text-muted-foreground text-lg">
+                                                    {apiData?.horaires}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+
+                            {/* Social Media Links */}
+                            {socialLinks.length > 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.3 }}
+                                >
+                                    <Card className="overflow-hidden border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg">
+                                        <CardContent className="p-8">
+                                            <h3 className="font-bold text-lg mb-6">Connect With Us</h3>
+                                            <div className="flex flex-wrap gap-4">
+                                                {socialLinks.map((link, index) => (
+                                                    <a
+                                                        key={index}
+                                                        href={link.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-md ${link.color}`}
+                                                        title={link.label}
+                                                    >
+                                                        <link.icon className="w-6 h-6" />
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
+                            )}
+                        </div>
                     </div>
-
-                    {/* Contact Form */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
-                        className="max-w-2xl mx-auto"
-                    >
-                        <Card>
-                            <CardContent className="pt-6">
-                                <form onSubmit={handleSubmit} className="space-y-6">
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <label htmlFor="name" className="text-sm font-medium">
-                                                {t("contactPage.name")}
-                                            </label>
-                                            <Input
-                                                id="name"
-                                                name="name"
-                                                value={formData.name}
-                                                onChange={handleChange}
-                                                required
-                                                placeholder={t("contactPage.namePlaceholder")}
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label htmlFor="email" className="text-sm font-medium">
-                                                {t("contactPage.email")}
-                                            </label>
-                                            <Input
-                                                id="email"
-                                                name="email"
-                                                type="email"
-                                                value={formData.email}
-                                                onChange={handleChange}
-                                                required
-                                                placeholder={t("contactPage.emailPlaceholder")}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label htmlFor="subject" className="text-sm font-medium">
-                                            {t("contactPage.subject")}
-                                        </label>
-                                        <Input
-                                            id="subject"
-                                            name="subject"
-                                            value={formData.subject}
-                                            onChange={handleChange}
-                                            required
-                                            placeholder={t("contactPage.subjectPlaceholder")}
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label htmlFor="message" className="text-sm font-medium">
-                                            {t("contactPage.message")}
-                                        </label>
-                                        <Textarea
-                                            id="message"
-                                            name="message"
-                                            value={formData.message}
-                                            onChange={handleChange}
-                                            required
-                                            rows={6}
-                                            placeholder={t("contactPage.messagePlaceholder")}
-                                        />
-                                    </div>
-
-                                    <Button type="submit" size="lg" className="w-full gap-2" disabled={isSubmitting}>
-                                        <Send className="w-4 h-4" />
-                                        {isSubmitting ? t("contactPage.sending") || "Sending..." : t("contactPage.submit")}
-                                    </Button>
-                                </form>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
                 </div>
             </main>
 
