@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Clock, ArrowLeft, Send } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, ArrowLeft, Send, Printer } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,47 +10,78 @@ import { useTranslation } from "@/contexts/TranslationContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
+import { useContactInfo } from "@/hooks/useContactInfo";
+import { contactService } from "@/services/contactService";
 
 const ContactUsPage = () => {
     const { t, language } = useTranslation();
+    const { data: apiData, isLoading } = useContactInfo();
     const [formData, setFormData] = useState({
         name: "",
         email: "",
         subject: "",
         message: "",
     });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    type TranslatableField = { fr: string; ar: string; en: string; } | undefined;
+    type Language = 'en' | 'fr' | 'ar';
+
+    const getTranslated = (field: TranslatableField) => {
+        if (!field) return '';
+        return field[language as Language] || field['en'] || '';
+    };
 
     const contactInfo = [
         {
             icon: Mail,
             title: t("contact.email"),
-            value: "contact@toorrii.com",
+            value: apiData?.email || "contact@toorrii.com",
             color: "text-primary",
         },
         {
             icon: Phone,
             title: t("contact.phone"),
-            value: "+213 (0) 123 456 789",
+            value: (
+                <div className="flex flex-col items-center">
+                    {apiData?.telephone_1 && <span>{apiData.telephone_1}</span>}
+                    {apiData?.telephone_2 && <span>{apiData.telephone_2}</span>}
+                </div>
+            ),
             color: "text-secondary",
+        },
+        {
+            icon: Printer,
+            title: "Fax",
+            value: apiData?.telephone_fixe,
+            color: "text-primary",
         },
         {
             icon: MapPin,
             title: t("contact.location"),
-            value: "Algiers, Algeria",
+            value: apiData?.adresse ? `${getTranslated(apiData.adresse)}, ${getTranslated(apiData.ville)}` : "Algiers, Algeria",
             color: "text-primary",
         },
         {
             icon: Clock,
             title: t("contact.hours"),
-            value: t("contact.hoursValue"),
+            value: apiData?.horaires || t("contact.hoursValue"),
             color: "text-secondary",
         },
     ];
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        toast.success(t("contactPage.successMessage"));
-        setFormData({ name: "", email: "", subject: "", message: "" });
+        setIsSubmitting(true);
+        try {
+            await contactService.sendContactMessage(formData);
+            toast.success(t("contactPage.successMessage"));
+            setFormData({ name: "", email: "", subject: "", message: "" });
+        } catch (error) {
+            toast.error(t("contactPage.errorMessage") || "Failed to send message. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleChange = (
@@ -184,9 +215,9 @@ const ContactUsPage = () => {
                                         />
                                     </div>
 
-                                    <Button type="submit" size="lg" className="w-full gap-2">
+                                    <Button type="submit" size="lg" className="w-full gap-2" disabled={isSubmitting}>
                                         <Send className="w-4 h-4" />
-                                        {t("contactPage.submit")}
+                                        {isSubmitting ? t("contactPage.sending") || "Sending..." : t("contactPage.submit")}
                                     </Button>
                                 </form>
                             </CardContent>

@@ -7,24 +7,39 @@
 
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ExternalLink, Calendar, MapPin, TrendingUp, Users, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Calendar, MapPin, TrendingUp, Users, CheckCircle2, Mail, Phone, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { getPartnerById } from "@/data/partnersData";
 import { useTranslation } from "@/contexts/TranslationContext";
+import { usePartner } from "@/hooks/usePartners";
 const PartnerDetail = () => {
-    const {
-        partnerId
-    } = useParams<{
-        partnerId: string;
-    }>();
-    const {
-        t
-    } = useTranslation();
-    const partner = partnerId ? getPartnerById(partnerId) : undefined;
-    if (!partner) {
+    const { partnerId } = useParams<{ partnerId: string; }>();
+    const { t, language } = useTranslation();
+    const { data: partner, isLoading, error } = usePartner(partnerId || '');
+
+    type TranslatableField = { fr: string; ar: string; en: string; } | undefined;
+    type Language = 'en' | 'fr' | 'ar';
+
+    const getTranslated = (field: TranslatableField) => {
+        if (!field) return '';
+        return field[language as Language] || field['en'] || '';
+    };
+
+    if (isLoading) {
+        return <div className="min-h-screen bg-background">
+            <Header />
+            <div className="container mx-auto px-6 pt-32 pb-20">
+                <div className="text-center">
+                    <h1 className="text-4xl font-bold mb-4">{t('partner.loading') || 'Loading...'}</h1>
+                </div>
+            </div>
+            <Footer />
+        </div>;
+    }
+
+    if (error || !partner) {
         return <div className="min-h-screen bg-background">
             <Header />
             <div className="container mx-auto px-6 pt-32 pb-20">
@@ -71,53 +86,59 @@ const PartnerDetail = () => {
 
                     <div className="relative grid md:grid-cols-[1.5fr,1fr] gap-16 items-center">
                         <div className="space-y-6">
-                            <Badge className="mb-2 text-sm px-4 py-1.5">{partner.industry}</Badge>
-                            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">{partner.name}</h1>
-                            <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-2xl">{partner.description}</p>
+                            {partner.type_partenaire && <Badge className="mb-2 text-sm px-4 py-1.5">{partner.type_partenaire}</Badge>}
+                            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">{getTranslated(partner.nom_partenaire)}</h1>
+                            {partner.description && <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-2xl">{getTranslated(partner.description)}</p>}
 
                             <div className="flex flex-wrap gap-6 pt-4">
-                                <div className="flex items-center gap-3">
+                                {partner.date_creation_entreprise && <div className="flex items-center gap-3">
                                     <div className="p-2 rounded-lg bg-primary/10">
                                         <Calendar className="w-5 h-5 text-primary" />
                                     </div>
                                     <div>
                                         <p className="text-xs text-muted-foreground uppercase tracking-wide">{t('partner.founded')}</p>
-                                        <p className="font-semibold text-lg">{partner.founded}</p>
+                                        <p className="font-semibold text-lg">{new Date(partner.date_creation_entreprise).getFullYear()}</p>
                                     </div>
-                                </div>
-                                <div className="flex items-center gap-3">
+                                </div>}
+                                {partner.adresse && partner.adresse.length > 0 && <div className="flex items-center gap-3">
                                     <div className="p-2 rounded-lg bg-primary/10">
                                         <MapPin className="w-5 h-5 text-primary" />
                                     </div>
                                     <div>
                                         <p className="text-xs text-muted-foreground uppercase tracking-wide">{t('partner.headquarters')}</p>
-                                        <p className="font-semibold text-lg">{partner.headquarters}</p>
+                                        <p className="font-semibold text-lg">{getTranslated(partner.adresse[0].ville)}</p>
                                     </div>
-                                </div>
-                                <div className="flex items-center gap-3">
+                                </div>}
+                                {partner.date_deb && <div className="flex items-center gap-3">
                                     <div className="p-2 rounded-lg bg-primary/10">
                                         <TrendingUp className="w-5 h-5 text-primary" />
                                     </div>
                                     <div>
                                         <p className="text-xs text-muted-foreground uppercase tracking-wide">{t('partner.partnershipSince')}</p>
-                                        <p className="font-semibold text-lg">{partner.collaboration.startDate}</p>
+                                        <p className="font-semibold text-lg">{new Date(partner.date_deb).getFullYear()}</p>
                                     </div>
-                                </div>
+                                </div>}
                             </div>
 
-                            {partner.website && <div className="pt-4">
-                                <a href={partner.website} target="_blank" rel="noopener noreferrer">
+                            <div className="flex flex-wrap gap-3 pt-4">
+                                {partner.site_web && <a href={partner.site_web} target="_blank" rel="noopener noreferrer">
                                     <Button size="lg" variant="outline" className="gap-2">
                                         {t('partner.visitWebsite')}
                                         <ExternalLink className="w-4 h-4" />
                                     </Button>
-                                </a>
-                            </div>}
+                                </a>}
+                                {partner.email && <a href={`mailto:${partner.email}`}>
+                                    <Button size="lg" variant="outline" className="gap-2">
+                                        <Mail className="w-4 h-4" />
+                                        {t('contact.email')}
+                                    </Button>
+                                </a>}
+                            </div>
                         </div>
 
                         <div className="h-full min-h-[300px] relative">
                             <div className="sticky top-8 h-full rounded-2xl flex items-center justify-center p-8">
-                                <img src={partner.logo} alt={partner.name} className="relative w-full h-full object-contain drop-shadow-2xl" />
+                                <img src={partner.logo || '/placeholder.svg'} alt={getTranslated(partner.nom_partenaire)} className="relative w-full h-full object-contain drop-shadow-2xl" />
                             </div>
                         </div>
                     </div>
@@ -138,52 +159,62 @@ const PartnerDetail = () => {
                             <div className="absolute -left-8 top-0 text-[12rem] font-black text-primary/5 leading-none select-none">"</div>
                             <div className="relative">
                                 <h3 className="text-5xl md:text-6xl lg:text-7xl font-black mb-12 leading-tight">
-                                    {t('partner.aboutTitle')} {partner.name}
+                                    {t('partner.aboutTitle')} {getTranslated(partner.nom_partenaire)}
                                 </h3>
 
-                                <div className="space-y-8">
+                                {partner.description && <div className="space-y-8">
                                     <p className="text-2xl md:text-3xl text-foreground leading-relaxed font-light">
-                                        {partner.about}
+                                        {getTranslated(partner.description)}
                                     </p>
 
-                                    <div className="border-l-4 border-primary pl-8 py-4">
-                                        <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed italic">
-                                            {t('partner.aboutQuote').replace('{name}', partner.name).replace('{industry}', partner.industry.toLowerCase())}
-                                        </p>
+                                    {/* Contact Information */}
+                                    <div className="grid md:grid-cols-3 gap-6 pt-8 border-t border-border/50 mt-8">
+                                        {partner.email && <div className="space-y-2">
+                                            <div className="flex items-center gap-2 text-primary mb-3">
+                                                <Mail className="w-5 h-5" />
+                                                <span className="font-semibold text-sm uppercase tracking-wider">{t('contact.email')}</span>
+                                            </div>
+                                            <p className="text-muted-foreground leading-relaxed break-all">
+                                                {partner.email}
+                                            </p>
+                                        </div>}
+
+                                        {partner.telephone && <div className="space-y-2">
+                                            <div className="flex items-center gap-2 text-primary mb-3">
+                                                <Phone className="w-5 h-5" />
+                                                <span className="font-semibold text-sm uppercase tracking-wider">{t('contact.phone')}</span>
+                                            </div>
+                                            <p className="text-muted-foreground leading-relaxed">
+                                                {partner.telephone}
+                                            </p>
+                                        </div>}
+
+                                        {partner.adresse && partner.adresse.length > 0 && <div className="space-y-2">
+                                            <div className="flex items-center gap-2 text-primary mb-3">
+                                                <MapPin className="w-5 h-5" />
+                                                <span className="font-semibold text-sm uppercase tracking-wider">{t('contact.location')}</span>
+                                            </div>
+                                            <p className="text-muted-foreground leading-relaxed">
+                                                {getTranslated(partner.adresse[0].rue)}, {getTranslated(partner.adresse[0].ville)}, {getTranslated(partner.adresse[0].pays)}
+                                            </p>
+                                        </div>}
                                     </div>
 
-                                    <div className="grid md:grid-cols-3 gap-6 pt-8">
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-2 text-primary mb-3">
-                                                <Users className="w-5 h-5" />
-                                                <span className="font-semibold text-sm uppercase tracking-wider">{t('partner.collaboration')}</span>
-                                            </div>
-                                            <p className="text-muted-foreground leading-relaxed">
-                                                {t('partner.collaborationDesc')}
-                                            </p>
+                                    {/* External Links */}
+                                    {partner.liens_externes && Object.keys(partner.liens_externes).length > 0 && <div className="space-y-4 pt-8">
+                                        <h4 className="font-semibold text-lg">{t('partner.externalLinks') || 'External Links'}</h4>
+                                        <div className="flex flex-wrap gap-3">
+                                            {Object.entries(partner.liens_externes).map(([key, url]) => url && (
+                                                <a key={key} href={url} target="_blank" rel="noopener noreferrer">
+                                                    <Button variant="outline" size="sm" className="gap-2">
+                                                        <Globe className="w-4 h-4" />
+                                                        {key}
+                                                    </Button>
+                                                </a>
+                                            ))}
                                         </div>
-
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-2 text-primary mb-3">
-                                                <TrendingUp className="w-5 h-5" />
-                                                <span className="font-semibold text-sm uppercase tracking-wider">{t('partner.innovation')}</span>
-                                            </div>
-                                            <p className="text-muted-foreground leading-relaxed">
-                                                {t('partner.innovationDesc')}
-                                            </p>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-2 text-primary mb-3">
-                                                <CheckCircle2 className="w-5 h-5" />
-                                                <span className="font-semibold text-sm uppercase tracking-wider">{t('partner.results')}</span>
-                                            </div>
-                                            <p className="text-muted-foreground leading-relaxed">
-                                                {t('partner.resultsDesc')}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+                                    </div>}
+                                </div>}
                             </div>
                         </div>
                     </motion.div>
@@ -191,7 +222,7 @@ const PartnerDetail = () => {
             </section>
 
             {/* Gallery Section - Creative Bento Grid */}
-            {partner.gallery && partner.gallery.length > 0 && (
+            {partner.image_banniere && (
                 <section className="container mx-auto px-6 mb-32">
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
@@ -204,86 +235,19 @@ const PartnerDetail = () => {
                             <p className="text-muted-foreground text-lg">{t('partner.gallerySubtitle')}</p>
                         </div>
 
-                        {/* Asymmetric Bento Grid */}
-                        <div className="grid grid-cols-12 gap-4 auto-rows-[200px]">
-                            {/* Large Feature Image - Spans 2 rows, 8 columns on desktop */}
+                        {/* Banner Image Display */}
+                        <div className="w-full">
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 whileInView={{ opacity: 1, scale: 1 }}
                                 viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: 0.1 }}
-                                className="col-span-12 md:col-span-8 row-span-2 relative group overflow-hidden rounded-3xl"
+                                transition={{ duration: 0.5 }}
+                                className="relative group overflow-hidden rounded-3xl aspect-video"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
                                 <img
-                                    src={partner.gallery[0]}
-                                    alt={`${partner.name} showcase 1`}
-                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                />
-                                <div className="absolute bottom-6 left-6 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                    <p className="text-background font-bold text-lg">{t('partner.featureHighlight')}</p>
-                                </div>
-                            </motion.div>
-
-                            {/* Two Stacked Images */}
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                whileInView={{ opacity: 1, scale: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: 0.2 }}
-                                className="col-span-6 md:col-span-4 row-span-1 relative group overflow-hidden rounded-2xl"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-br from-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
-                                <img
-                                    src={partner.gallery[1] || partner.gallery[0]}
-                                    alt={`${partner.name} showcase 2`}
-                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                />
-                            </motion.div>
-
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                whileInView={{ opacity: 1, scale: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: 0.3 }}
-                                className="col-span-6 md:col-span-4 row-span-1 relative group overflow-hidden rounded-2xl"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-br from-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
-                                <img
-                                    src={partner.gallery[2] || partner.gallery[0]}
-                                    alt={`${partner.name} showcase 3`}
-                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                />
-                            </motion.div>
-
-                            {/* Wide Panoramic Image */}
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                whileInView={{ opacity: 1, scale: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: 0.4 }}
-                                className="col-span-12 md:col-span-7 row-span-1 relative group overflow-hidden rounded-2xl"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
-                                <img
-                                    src={partner.gallery[3] || partner.gallery[0]}
-                                    alt={`${partner.name} showcase 4`}
-                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                />
-                            </motion.div>
-
-                            {/* Square Accent */}
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                whileInView={{ opacity: 1, scale: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: 0.5 }}
-                                className="col-span-12 md:col-span-5 row-span-1 relative group overflow-hidden rounded-2xl"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-tl from-primary/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
-                                <img
-                                    src={partner.gallery[4] || partner.gallery[0]}
-                                    alt={`${partner.name} showcase 5`}
+                                    src={partner.image_banniere}
+                                    alt={`${getTranslated(partner.nom_partenaire)} banner`}
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                 />
                             </motion.div>
