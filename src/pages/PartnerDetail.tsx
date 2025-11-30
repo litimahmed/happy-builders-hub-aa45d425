@@ -28,12 +28,14 @@ const PartnerDetail = () => {
         return translated || fallback;
     };
 
-    const getImageUrl = (path: string | undefined): string => {
-        if (!path) return '/placeholder.svg';
-        if (path.startsWith('http')) return path;
-        const BASE_URL = import.meta.env.VITE_DJANGO_API_URL || 'http://127.0.0.1:8000';
-        return `${BASE_URL.replace('/api', '')}/${path}`;
-    };
+  const getImageUrl = (path: string | undefined): string => {
+    if (!path) return '/placeholder.svg';
+    if (path.startsWith('http')) return path;
+    const BASE_URL = import.meta.env.VITE_DJANGO_API_URL || 'http://127.0.0.1:8000';
+    const cleanBase = BASE_URL.replace('/api', '');
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${cleanBase}${cleanPath}`;
+  };
 
     if (isLoading) {
         return <div className="min-h-screen bg-background">
