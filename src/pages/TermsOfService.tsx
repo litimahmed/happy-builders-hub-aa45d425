@@ -11,8 +11,17 @@ import { FileText, Scale, Shield, AlertCircle } from "lucide-react";
 import { useTermsOfService } from "@/hooks/useTermsOfService";
 
 const TermsOfService = () => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { data: termsData } = useTermsOfService();
+
+  type TranslatableField = { fr?: string; ar?: string; en?: string; } | undefined | {};
+  type Language = 'en' | 'fr' | 'ar';
+
+  const getTranslated = (field: TranslatableField, fallback: string = ''): string => {
+    if (!field || typeof field !== 'object') return fallback;
+    const translated = field[language as Language] || field['en'] || field['fr'] || field['ar'];
+    return translated || fallback;
+  };
 
   const sections = [
     {
@@ -54,7 +63,7 @@ const TermsOfService = () => {
               <FileText className="w-10 h-10 text-primary" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              {termsData?.titre || t("terms.title")}
+              {getTranslated(termsData?.titre, t("terms.title"))}
             </h1>
             <p className="text-xl text-muted-foreground mb-4">
               {t("terms.subtitle")}
@@ -72,7 +81,7 @@ const TermsOfService = () => {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Introduction */}
-          {termsData?.contenu && (
+          {getTranslated(termsData?.contenu) && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -80,12 +89,12 @@ const TermsOfService = () => {
               className="mb-12 p-8 bg-card border border-border rounded-2xl"
             >
               <div className="text-muted-foreground leading-relaxed whitespace-pre-line">
-                {termsData.contenu}
+                {getTranslated(termsData?.contenu)}
               </div>
             </motion.div>
           )}
           
-          {!termsData?.contenu && (
+          {!getTranslated(termsData?.contenu) && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
