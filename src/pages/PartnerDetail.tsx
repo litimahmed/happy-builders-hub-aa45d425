@@ -19,12 +19,20 @@ const PartnerDetail = () => {
     const { t, language } = useTranslation();
     const { data: partner, isLoading, error } = usePartner(partnerId || '');
 
-    type TranslatableField = { fr: string; ar: string; en: string; } | undefined;
+    type TranslatableField = { fr?: string; ar?: string; en?: string; } | undefined | {};
     type Language = 'en' | 'fr' | 'ar';
 
-    const getTranslated = (field: TranslatableField) => {
-        if (!field) return '';
-        return field[language as Language] || field['en'] || '';
+    const getTranslated = (field: TranslatableField, fallback: string = ''): string => {
+        if (!field || typeof field !== 'object') return fallback;
+        const translated = field[language as Language] || field['en'] || field['fr'] || field['ar'];
+        return translated || fallback;
+    };
+
+    const getImageUrl = (path: string | undefined): string => {
+        if (!path) return '/placeholder.svg';
+        if (path.startsWith('http')) return path;
+        const BASE_URL = import.meta.env.VITE_DJANGO_API_URL || 'http://127.0.0.1:8000';
+        return `${BASE_URL.replace('/api', '')}/${path}`;
     };
 
     if (isLoading) {
@@ -87,8 +95,14 @@ const PartnerDetail = () => {
                     <div className="relative grid md:grid-cols-[1.5fr,1fr] gap-16 items-center">
                         <div className="space-y-6">
                             {partner.type_partenaire && <Badge className="mb-2 text-sm px-4 py-1.5">{partner.type_partenaire}</Badge>}
-                            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">{getTranslated(partner.nom_partenaire)}</h1>
-                            {partner.description && <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-2xl">{getTranslated(partner.description)}</p>}
+                            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">
+                                {getTranslated(partner.nom_partenaire, `Partner ${partnerId}`)}
+                            </h1>
+                            {getTranslated(partner.description) && (
+                                <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-2xl">
+                                    {getTranslated(partner.description)}
+                                </p>
+                            )}
 
                             <div className="flex flex-wrap gap-6 pt-4">
                                 {partner.date_creation_entreprise && <div className="flex items-center gap-3">
@@ -138,7 +152,14 @@ const PartnerDetail = () => {
 
                         <div className="h-full min-h-[300px] relative">
                             <div className="sticky top-8 h-full rounded-2xl flex items-center justify-center p-8">
-                                <img src={partner.logo || '/placeholder.svg'} alt={getTranslated(partner.nom_partenaire)} className="relative w-full h-full object-contain drop-shadow-2xl" />
+                                <img 
+                                    src={getImageUrl(partner.logo)} 
+                                    alt={getTranslated(partner.nom_partenaire, `Partner ${partnerId}`)} 
+                                    className="relative w-full h-full object-contain drop-shadow-2xl"
+                                    onError={(e) => {
+                                        e.currentTarget.src = '/placeholder.svg';
+                                    }}
+                                />
                             </div>
                         </div>
                     </div>
@@ -159,10 +180,10 @@ const PartnerDetail = () => {
                             <div className="absolute -left-8 top-0 text-[12rem] font-black text-primary/5 leading-none select-none">"</div>
                             <div className="relative">
                                 <h3 className="text-5xl md:text-6xl lg:text-7xl font-black mb-12 leading-tight">
-                                    {t('partner.aboutTitle')} {getTranslated(partner.nom_partenaire)}
+                                    {t('partner.aboutTitle')} {getTranslated(partner.nom_partenaire, `Partner ${partnerId}`)}
                                 </h3>
 
-                                {partner.description && <div className="space-y-8">
+                                {getTranslated(partner.description) && <div className="space-y-8">
                                     <p className="text-2xl md:text-3xl text-foreground leading-relaxed font-light">
                                         {getTranslated(partner.description)}
                                     </p>
@@ -246,9 +267,12 @@ const PartnerDetail = () => {
                             >
                                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
                                 <img
-                                    src={partner.image_banniere}
-                                    alt={`${getTranslated(partner.nom_partenaire)} banner`}
+                                    src={getImageUrl(partner.image_banniere)}
+                                    alt={`${getTranslated(partner.nom_partenaire, `Partner ${partnerId}`)} banner`}
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                    onError={(e) => {
+                                        e.currentTarget.src = '/placeholder.svg';
+                                    }}
                                 />
                             </motion.div>
                         </div>

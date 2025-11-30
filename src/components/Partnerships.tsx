@@ -20,12 +20,20 @@ const Partnerships = () => {
     const { t, language } = useTranslation();
     const { data: partners, isLoading } = usePartners();
 
-    type TranslatableField = { fr: string; ar: string; en: string; } | undefined;
+    type TranslatableField = { fr?: string; ar?: string; en?: string; } | undefined | {};
     type Language = 'en' | 'fr' | 'ar';
 
-    const getTranslated = (field: TranslatableField) => {
-        if (!field) return '';
-        return field[language as Language] || field['en'] || '';
+    const getTranslated = (field: TranslatableField, fallback: string = ''): string => {
+        if (!field || typeof field !== 'object') return fallback;
+        const translated = field[language as Language] || field['en'] || field['fr'] || field['ar'];
+        return translated || fallback;
+    };
+
+    const getImageUrl = (path: string | undefined): string => {
+        if (!path) return '/placeholder.svg';
+        if (path.startsWith('http')) return path;
+        const BASE_URL = import.meta.env.VITE_DJANGO_API_URL || 'http://127.0.0.1:8000';
+        return `${BASE_URL.replace('/api', '')}/${path}`;
     };
 
     // Filter active partners and sort by priority
@@ -100,7 +108,8 @@ const Partnerships = () => {
                         {/* The activePartners array is duplicated to create a seamless loop. */}
                         {[...activePartners, ...activePartners].map((partner, index) => {
                             const partnerId = partner.partenaire_id || partner.id?.toString();
-                            const partnerName = getTranslated(partner.nom_partenaire);
+                            const partnerName = getTranslated(partner.nom_partenaire, `Partner ${partnerId}`);
+                            const logoUrl = getImageUrl(partner.logo);
                             
                             return (
                                 <Link
@@ -120,9 +129,12 @@ const Partnerships = () => {
                                             {/* A subtle gradient overlay that appears on hover. */}
                                             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                             <img
-                                                src={partner.logo}
+                                                src={logoUrl}
                                                 alt={partnerName}
                                                 className="w-40 h-24 object-contain relative z-10 transition-all duration-300"
+                                                onError={(e) => {
+                                                    e.currentTarget.src = '/placeholder.svg';
+                                                }}
                                             />
                                         </div>
                                     </motion.div>
