@@ -8,8 +8,17 @@ import { useTranslation } from "@/contexts/TranslationContext";
 import { usePrivacyPolicy } from "@/hooks/usePrivacyPolicy";
 
 const PrivacyPolicy = () => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { data: privacyData } = usePrivacyPolicy();
+
+  type TranslatableField = { fr?: string; ar?: string; en?: string; } | undefined | {};
+  type Language = 'en' | 'fr' | 'ar';
+
+  const getTranslated = (field: TranslatableField, fallback: string = ''): string => {
+    if (!field || typeof field !== 'object') return fallback;
+    const translated = field[language as Language] || field['en'] || field['fr'] || field['ar'];
+    return translated || fallback;
+  };
   
   return (
     <div className="min-h-screen bg-background">
@@ -30,7 +39,7 @@ const PrivacyPolicy = () => {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              {privacyData?.titre || t('privacyPage.title')}
+              {getTranslated(privacyData?.titre, t('privacyPage.title'))}
             </h1>
             <p className="text-muted-foreground mb-8">
               {privacyData?.date_creation 
@@ -39,9 +48,9 @@ const PrivacyPolicy = () => {
               }
               {privacyData?.version && ` - Version ${privacyData.version}`}
             </p>
-            {privacyData?.contenu ? (
+            {getTranslated(privacyData?.contenu) ? (
               <div className="text-muted-foreground mb-12 whitespace-pre-line leading-relaxed">
-                {privacyData.contenu}
+                {getTranslated(privacyData.contenu)}
               </div>
             ) : (
               <>
