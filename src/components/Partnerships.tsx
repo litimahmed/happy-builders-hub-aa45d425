@@ -107,8 +107,8 @@ const Partnerships = () => {
 
                     {/* The scrolling container. The `animate-scroll-infinite` class applies the infinite scroll animation. */}
                     <div className="flex w-max gap-6 animate-scroll-infinite">
-                        {/* The activePartners array is duplicated to create a seamless loop. */}
-                        {[...activePartners, ...activePartners].map((partner, index) => {
+                        {/* The activePartners array is duplicated multiple times to create a seamless loop. */}
+                        {Array(8).fill(activePartners).flat().map((partner, index) => {
                             const partnerId = partner.partenaire_id || partner.id?.toString();
                             const partnerName = getTranslated(partner.nom_partenaire, `Partner ${partnerId}`);
                             const logoUrl = getImageUrl(partner.logo);
