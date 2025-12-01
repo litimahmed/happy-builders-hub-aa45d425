@@ -39,9 +39,9 @@ const Partnerships = () => {
     };
 
     // Filter active partners and sort by priority
-    const activePartners = partners
-        ?.filter(partner => partner.actif !== false)
-        ?.sort((a, b) => (a.priorite_affichage || 0) - (b.priorite_affichage || 0)) || [];
+    const activePartners = (partners || [])
+        .filter(partner => partner.actif !== false)
+        .sort((a, b) => (a.priorite_affichage || 0) - (b.priorite_affichage || 0));
 
     if (isLoading) {
         return (
