@@ -37,22 +37,44 @@ const TermsOfService = () => {
     return translated || fallback;
   };
 
-  const getTitleFromArray = (titleArray: any[] | undefined, fallback: string = ''): string => {
-    if (!titleArray || !Array.isArray(titleArray)) return fallback;
-    const titleObj = titleArray.find(t => t.lang === language) || titleArray.find(t => t.lang === 'en') || titleArray[0];
-    return titleObj?.value || fallback;
+  const getTitleFromData = (titleData: any, fallback: string = ''): string => {
+    if (!titleData) return fallback;
+    // Handle array format: [{ lang: "en", value: "..." }]
+    if (Array.isArray(titleData)) {
+      const titleObj = titleData.find(t => t.lang === language) || titleData.find(t => t.lang === 'en') || titleData[0];
+      return titleObj?.value || fallback;
+    }
+    // Handle object format: { en: "...", fr: "...", ar: "..." }
+    if (typeof titleData === 'object') {
+      return getTranslated(titleData, fallback);
+    }
+    return fallback;
   };
 
   const getContentSections = () => {
-    if (!termsData?.contenu || !Array.isArray(termsData.contenu)) return [];
-    return termsData.contenu.filter(section => section.type === 'section');
+    if (!termsData?.contenu) return [];
+    // Handle array format with sections
+    if (Array.isArray(termsData.contenu)) {
+      return termsData.contenu.filter(section => section.type === 'section');
+    }
+    return [];
   };
 
   const getIntroText = () => {
-    if (!termsData?.contenu || !Array.isArray(termsData.contenu)) return '';
-    const intro = termsData.contenu.find(section => section.type === 'intro');
-    return intro?.text ? getTranslated(intro.text) : '';
+    if (!termsData?.contenu) return '';
+    // Handle array format with intro
+    if (Array.isArray(termsData.contenu)) {
+      const intro = termsData.contenu.find(section => section.type === 'intro');
+      return intro?.text ? getTranslated(intro.text) : '';
+    }
+    // Handle simple object format
+    if (typeof termsData.contenu === 'object' && !Array.isArray(termsData.contenu)) {
+      return getTranslated(termsData.contenu);
+    }
+    return '';
   };
+
+  const hasApiContent = termsData && (getIntroText() || getContentSections().length > 0);
 
   const sections = [
     {
@@ -98,7 +120,7 @@ const TermsOfService = () => {
               <FileText className="w-10 h-10 text-primary" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              {getTitleFromArray(termsData?.titre, t("terms.title"))}
+              {getTitleFromData(termsData?.titre, t("terms.title"))}
             </h1>
             <p className="text-xl text-muted-foreground mb-4">
               {t("terms.subtitle")}
@@ -116,7 +138,7 @@ const TermsOfService = () => {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Introduction */}
-          {getIntroText() && (
+          {hasApiContent && getIntroText() && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -129,7 +151,7 @@ const TermsOfService = () => {
             </motion.div>
           )}
           
-          {!getIntroText() && (
+          {!hasApiContent && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -144,7 +166,7 @@ const TermsOfService = () => {
           )}
 
           {/* Main Sections from API */}
-          {getContentSections().length > 0 ? (
+          {hasApiContent && getContentSections().length > 0 ? (
             <div className="space-y-8">
               {getContentSections().map((section, index) => (
                 <motion.div

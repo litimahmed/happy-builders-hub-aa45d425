@@ -18,8 +18,8 @@ export interface ContentSection {
 
 export interface TermsOfServiceData {
   condition_id?: string;
-  titre?: LangValue[];
-  contenu?: ContentSection[];
+  titre?: LangValue[] | MultilingualText;
+  contenu?: ContentSection[] | MultilingualText;
   version?: number;
   date_creation?: string;
   active?: boolean;
