@@ -258,21 +258,17 @@ const PartnerDetail = () => {
                                     </div>
 
                                     {/* External Links */}
-                                    {partner.liens_externes && partner.liens_externes.length > 0 && <div className="space-y-4 pt-8">
-                                        <h4 className="font-semibold text-lg">{getExternalLinksTitle()}</h4>
-                                        <div className="flex flex-wrap gap-3">
-                                            {partner.liens_externes.map((link, index) => (
-                                                <a key={index} href={link.url} target="_blank" rel="noopener noreferrer">
-                                                    <Button variant="outline" size="sm" className="gap-2">
-                                                        <Globe className="w-4 h-4" />
-                                                        <div className="text-left">
-                                                            <div className="font-medium">{link.titre}</div>
-                                                            <div className="text-xs text-muted-foreground">{link.url.replace(/^https?:\/\//, '').substring(0, 30)}</div>
-                                                        </div>
-                                                    </Button>
-                                                </a>
-                                            ))}
-                                        </div>
+                                    {partner.liens_externes && partner.liens_externes.length > 0 && <div className="grid md:grid-cols-3 gap-6 pt-8 border-t border-border/50 mt-8">
+                                        {partner.liens_externes.map((link, index) => (
+                                            <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="space-y-2 hover:opacity-80 transition-opacity">
+                                                <div className="mb-3">
+                                                    <span className="font-semibold text-sm uppercase tracking-wider text-primary">{link.titre}</span>
+                                                </div>
+                                                <p className="text-muted-foreground leading-relaxed break-all">
+                                                    {link.url.replace(/^https?:\/\//, '')}
+                                                </p>
+                                            </a>
+                                        ))}
                                     </div>}
                                 </div>}
                             </div>
