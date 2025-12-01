@@ -1,13 +1,12 @@
-interface Translation {
-  fr: string;
-  ar: string;
-  en: string;
+interface TranslationItem {
+  lang: string;
+  value: string;
 }
 
 interface Address {
-  rue: Translation;
-  ville: Translation;
-  pays: Translation;
+  rue: TranslationItem[];
+  ville: TranslationItem[];
+  pays: TranslationItem[];
 }
 
 export interface PartnerLinks {
@@ -24,9 +23,9 @@ export interface PartnerContactInfo {
 export interface Partner {
   partenaire_id?: string;
   id?: number;
-  nom_partenaire: Translation;
+  nom_partenaire: TranslationItem[];
   logo?: string;
-  description?: Translation;
+  description?: TranslationItem[];
   adresse?: Address[];
   email: string;
   telephone: string;
@@ -39,7 +38,7 @@ export interface Partner {
   type_partenaire?: any;
   date_deb: string;
   date_fin: string;
-  liens_externes?: PartnerLinks;
+  liens_externes?: Array<{url: string; titre: string}>;
   date_creation_entreprise: string;
   priorite_affichage: number;
   image_banniere?: string;

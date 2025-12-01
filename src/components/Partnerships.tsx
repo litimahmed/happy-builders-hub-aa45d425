@@ -20,13 +20,16 @@ const Partnerships = () => {
     const { t, language } = useTranslation();
     const { data: partners, isLoading } = usePartners();
 
-    type TranslatableField = { fr?: string; ar?: string; en?: string; } | undefined | {};
-    type Language = 'en' | 'fr' | 'ar';
+    type TranslationItem = { lang: string; value: string; };
+    type TranslatableField = TranslationItem[] | undefined;
 
     const getTranslated = (field: TranslatableField, fallback: string = ''): string => {
-        if (!field || typeof field !== 'object') return fallback;
-        const translated = field[language as Language] || field['en'] || field['fr'] || field['ar'];
-        return translated || fallback;
+        if (!field || !Array.isArray(field)) return fallback;
+        const translation = field.find(item => item.lang === language) 
+            || field.find(item => item.lang === 'en') 
+            || field.find(item => item.lang === 'fr')
+            || field[0];
+        return translation?.value || fallback;
     };
 
     const getImageUrl = (path: string | undefined): string => {

@@ -19,13 +19,16 @@ const PartnerDetail = () => {
     const { t, language } = useTranslation();
     const { data: partner, isLoading, error } = usePartner(partnerId || '');
 
-    type TranslatableField = { fr?: string; ar?: string; en?: string; } | undefined | {};
-    type Language = 'en' | 'fr' | 'ar';
+    type TranslationItem = { lang: string; value: string; };
+    type TranslatableField = TranslationItem[] | undefined;
 
     const getTranslated = (field: TranslatableField, fallback: string = ''): string => {
-        if (!field || typeof field !== 'object') return fallback;
-        const translated = field[language as Language] || field['en'] || field['fr'] || field['ar'];
-        return translated || fallback;
+        if (!field || !Array.isArray(field)) return fallback;
+        const translation = field.find(item => item.lang === language) 
+            || field.find(item => item.lang === 'en') 
+            || field.find(item => item.lang === 'fr')
+            || field[0];
+        return translation?.value || fallback;
     };
 
   const getImageUrl = (path: string | undefined): string => {
@@ -251,14 +254,14 @@ const PartnerDetail = () => {
                                     </div>
 
                                     {/* External Links */}
-                                    {partner.liens_externes && Object.keys(partner.liens_externes).length > 0 && <div className="space-y-4 pt-8">
+                                    {partner.liens_externes && partner.liens_externes.length > 0 && <div className="space-y-4 pt-8">
                                         <h4 className="font-semibold text-lg">{t('partner.externalLinks') || 'External Links'}</h4>
                                         <div className="flex flex-wrap gap-3">
-                                            {Object.entries(partner.liens_externes).map(([key, url]) => url && (
-                                                <a key={key} href={url} target="_blank" rel="noopener noreferrer">
+                                            {partner.liens_externes.map((link, index) => (
+                                                <a key={index} href={link.url} target="_blank" rel="noopener noreferrer">
                                                     <Button variant="outline" size="sm" className="gap-2">
                                                         <Globe className="w-4 h-4" />
-                                                        {key}
+                                                        {link.titre}
                                                     </Button>
                                                 </a>
                                             ))}
