@@ -4,6 +4,8 @@
  */
 
 import { motion } from "framer-motion";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useTranslation } from "@/contexts/TranslationContext";
@@ -13,6 +15,18 @@ import { useTermsOfService } from "@/hooks/useTermsOfService";
 const TermsOfService = () => {
   const { t, language } = useTranslation();
   const { data: termsData } = useTermsOfService();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash) {
+      const element = document.getElementById(location.hash.substring(1));
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+      }
+    }
+  }, [location]);
 
   type TranslatableField = { fr?: string; ar?: string; en?: string; } | undefined | {};
   type Language = 'en' | 'fr' | 'ar';
@@ -25,21 +39,25 @@ const TermsOfService = () => {
 
   const sections = [
     {
+      id: "acceptance",
       icon: FileText,
       title: t("terms.acceptance.title"),
       content: t("terms.acceptance.content")
     },
     {
+      id: "user-rights",
       icon: Scale,
       title: t("terms.userRights.title"),
       content: t("terms.userRights.content")
     },
     {
+      id: "limitations",
       icon: Shield,
       title: t("terms.limitations.title"),
       content: t("terms.limitations.content")
     },
     {
+      id: "termination",
       icon: AlertCircle,
       title: t("terms.termination.title"),
       content: t("terms.termination.content")
@@ -113,10 +131,11 @@ const TermsOfService = () => {
             {sections.map((section, index) => (
               <motion.div
                 key={index}
+                id={section.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 * index }}
-                className="p-8 bg-card border border-border rounded-2xl hover:border-primary/50 transition-colors"
+                className="p-8 bg-card border border-border rounded-2xl hover:border-primary/50 transition-colors scroll-mt-24"
               >
                 <div className="flex items-start gap-4 mb-4">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
