@@ -16,7 +16,28 @@ import { useTranslation } from "@/contexts/TranslationContext";
  * @description The main component for the terms of service section.
  */
 const TermsOfService = () => {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  
+  const getText = (key: string) => {
+    const texts: Record<string, Record<string, string>> = {
+      continueReading: {
+        en: "Continue reading",
+        fr: "Continuer la lecture",
+        ar: "متابعة القراءة"
+      },
+      description: {
+        en: "By using our services, you agree to these terms. Please read them carefully to understand your rights and responsibilities.",
+        fr: "En utilisant nos services, vous acceptez ces conditions. Veuillez les lire attentivement pour comprendre vos droits et responsabilités.",
+        ar: "باستخدام خدماتنا، فإنك توافق على هذه الشروط. يرجى قراءتها بعناية لفهم حقوقك ومسؤولياتك."
+      },
+      readMore: {
+        en: "Read Full Terms",
+        fr: "Lire les conditions complètes",
+        ar: "اقرأ الشروط الكاملة"
+      }
+    };
+    return texts[key]?.[language] || texts[key]?.en || "";
+  };
   
   // An array of terms features to be displayed in the section.
   const termsFeatures = [
@@ -106,7 +127,7 @@ const TermsOfService = () => {
                     to={`/terms-of-service#${feature.id}`}
                     className="text-primary text-sm font-medium hover:underline inline-flex items-center gap-1"
                   >
-                    {t("terms.continueReading") || "Continue reading"}
+                    {getText("continueReading")}
                     <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>
@@ -124,11 +145,11 @@ const TermsOfService = () => {
           className="text-center bg-card border border-border rounded-2xl p-8 max-w-3xl mx-auto"
         >
           <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-            {t("terms.description")}
+            {getText("description")}
           </p>
           <Link to="/terms-of-service">
             <Button variant="cta" size="lg" className="group">
-              {t("terms.readMore")}
+              {getText("readMore")}
               <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
