@@ -8,41 +8,65 @@
 // Import necessary libraries and components.
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Shield, Lock, Eye, FileCheck } from "lucide-react";
+import { ArrowRight, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "@/contexts/TranslationContext";
+import { usePrivacyPolicy } from "@/hooks/usePrivacyPolicy";
 
 /**
  * @component PrivacyPolicy
  * @description The main component for the privacy policy section.
  */
 const PrivacyPolicy = () => {
-  // Hook to get the translation function.
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const { data: privacyData } = usePrivacyPolicy();
+
+  type Language = 'en' | 'fr' | 'ar';
+  type TranslatableField = { fr?: string; ar?: string; en?: string; } | undefined | {};
+
+  const getTranslated = (field: TranslatableField, fallback: string = ''): string => {
+    if (!field || typeof field !== 'object') return fallback;
+    const translated = field[language as Language] || field['en'] || field['fr'] || field['ar'];
+    return translated || fallback;
+  };
+
+  const getContentSections = () => {
+    if (!privacyData?.contenu) return [];
+    if (Array.isArray(privacyData.contenu)) {
+      return privacyData.contenu.filter(section => section.type === 'section').slice(0, 4);
+    }
+    return [];
+  };
+
+  const apiSections = getContentSections();
   
-  // An array of privacy features to be displayed in the section.
-  const privacyFeatures = [
+  // Fallback sections when no API data
+  const fallbackSections = [
     {
-      icon: Shield,
       title: t("privacy.dataProtection"),
       description: t("privacy.dataProtectionDesc")
     },
     {
-      icon: Lock,
       title: t("privacy.encryption"),
       description: t("privacy.encryptionDesc")
     },
     {
-      icon: Eye,
       title: t("privacy.transparency"),
       description: t("privacy.transparencyDesc")
     },
     {
-      icon: FileCheck,
       title: t("privacy.compliance"),
       description: t("privacy.complianceDesc")
     }
   ];
+
+  // Use API sections if available, otherwise use fallback
+  const privacyFeatures = apiSections.length > 0 
+    ? apiSections.map((section) => ({
+        title: getTranslated(section.titre),
+        description: getTranslated(section.paragraphe)
+      }))
+    : fallbackSections;
   
   return (
     <section id="privacy" className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-muted/30">
@@ -95,7 +119,7 @@ const PrivacyPolicy = () => {
                 
                 <div className="relative z-10">
                   <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <feature.icon className="w-7 h-7 text-primary" />
+                    <Shield className="w-7 h-7 text-primary" />
                   </div>
                   <h3 className="text-lg font-semibold mb-3">{feature.title}</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>

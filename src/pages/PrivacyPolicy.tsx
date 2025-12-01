@@ -19,6 +19,45 @@ const PrivacyPolicy = () => {
     const translated = field[language as Language] || field['en'] || field['fr'] || field['ar'];
     return translated || fallback;
   };
+
+  const getTitleFromData = (titleData: any, fallback: string = ''): string => {
+    if (!titleData) return fallback;
+    // Handle array format: [{ lang: "en", value: "..." }]
+    if (Array.isArray(titleData)) {
+      const titleObj = titleData.find(t => t.lang === language) || titleData.find(t => t.lang === 'en') || titleData[0];
+      return titleObj?.value || fallback;
+    }
+    // Handle object format: { en: "...", fr: "...", ar: "..." }
+    if (typeof titleData === 'object') {
+      return getTranslated(titleData, fallback);
+    }
+    return fallback;
+  };
+
+  const getContentSections = () => {
+    if (!privacyData?.contenu) return [];
+    // Handle array format with sections
+    if (Array.isArray(privacyData.contenu)) {
+      return privacyData.contenu.filter(section => section.type === 'section');
+    }
+    return [];
+  };
+
+  const getIntroText = () => {
+    if (!privacyData?.contenu) return '';
+    // Handle array format with intro
+    if (Array.isArray(privacyData.contenu)) {
+      const intro = privacyData.contenu.find(section => section.type === 'intro');
+      return intro?.text ? getTranslated(intro.text) : '';
+    }
+    // Handle simple object format
+    if (typeof privacyData.contenu === 'object' && !Array.isArray(privacyData.contenu)) {
+      return getTranslated(privacyData.contenu);
+    }
+    return '';
+  };
+
+  const hasApiContent = privacyData && (getIntroText() || getContentSections().length > 0);
   
   return (
     <div className="min-h-screen bg-background">
@@ -39,7 +78,7 @@ const PrivacyPolicy = () => {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              {getTranslated(privacyData?.titre, t('privacyPage.title'))}
+              {getTitleFromData(privacyData?.titre, t('privacyPage.title'))}
             </h1>
             <p className="text-muted-foreground mb-8">
               {privacyData?.date_creation 
@@ -48,11 +87,26 @@ const PrivacyPolicy = () => {
               }
               {privacyData?.version && ` - Version ${privacyData.version}`}
             </p>
-            {getTranslated(privacyData?.contenu) ? (
+            {hasApiContent && getIntroText() && (
               <div className="text-muted-foreground mb-12 whitespace-pre-line leading-relaxed">
-                {getTranslated(privacyData.contenu)}
+                {getIntroText()}
               </div>
-            ) : (
+            )}
+
+            {hasApiContent && getContentSections().length > 0 && (
+              <div className="space-y-12">
+                {getContentSections().map((section, index) => (
+                  <section key={index}>
+                    <h2 className="text-2xl font-semibold mb-4">{getTranslated(section.titre)}</h2>
+                    <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+                      {getTranslated(section.paragraphe)}
+                    </p>
+                  </section>
+                ))}
+              </div>
+            )}
+
+            {!hasApiContent && (
               <>
                 <p className="text-muted-foreground mb-12">
                   {t('privacyPage.intro')}
