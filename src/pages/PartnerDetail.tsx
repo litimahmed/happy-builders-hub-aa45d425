@@ -34,7 +34,7 @@ const PartnerDetail = () => {
   const getImageUrl = (path: string | undefined): string => {
     if (!path) return '/placeholder.svg';
     if (path.startsWith('http')) return path;
-    const BASE_URL = import.meta.env.VITE_DJANGO_API_URL || 'http://127.0.0.1:8000';
+    const BASE_URL = import.meta.env.VITE_DJANGO_API_URL || 'http://127.0.0.1:8080';
     const cleanBase = BASE_URL.replace('/api', '').replace(/\/$/, '');
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
     return `${cleanBase}${cleanPath}`;
@@ -258,17 +258,20 @@ const PartnerDetail = () => {
                                     </div>
 
                                     {/* External Links */}
-                                    {partner.liens_externes && partner.liens_externes.length > 0 && <div className="grid md:grid-cols-3 gap-6 pt-8 border-t border-border/50 mt-8">
-                                        {partner.liens_externes.map((link, index) => (
-                                            <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="space-y-2 hover:opacity-80 transition-opacity">
-                                                <div className="mb-3">
-                                                    <span className="font-semibold text-sm uppercase tracking-wider text-primary">{link.titre}</span>
-                                                </div>
-                                                <p className="text-muted-foreground leading-relaxed break-all">
-                                                    {link.url.replace(/^https?:\/\//, '')}
-                                                </p>
-                                            </a>
-                                        ))}
+                                    {partner.liens_externes && partner.liens_externes.length > 0 && <div className="space-y-6 pt-8 border-t border-border/50 mt-8">
+                                        <h4 className="text-2xl font-bold">{getExternalLinksTitle()}</h4>
+                                        <div className="grid md:grid-cols-3 gap-6">
+                                            {partner.liens_externes.map((link, index) => (
+                                                <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="space-y-2 hover:opacity-80 transition-opacity">
+                                                    <div className="mb-3">
+                                                        <span className="font-semibold text-sm uppercase tracking-wider text-primary">{link.titre}</span>
+                                                    </div>
+                                                    <p className="text-muted-foreground leading-relaxed break-all">
+                                                        {link.url.replace(/^https?:\/\//, '')}
+                                                    </p>
+                                                </a>
+                                            ))}
+                                        </div>
                                     </div>}
                                 </div>}
                             </div>
