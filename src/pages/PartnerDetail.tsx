@@ -220,7 +220,7 @@ const PartnerDetail = () => {
                                 </h3>
 
                                 {getTranslated(partner.description) && <div className="space-y-8">
-                                    <p className="text-2xl md:text-3xl text-foreground leading-relaxed font-light">
+                                    <p className="text-xl md:text-2xl text-foreground/90 leading-[1.8] font-normal tracking-wide">
                                         {getTranslated(partner.description)}
                                     </p>
 

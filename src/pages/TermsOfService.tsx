@@ -37,6 +37,23 @@ const TermsOfService = () => {
     return translated || fallback;
   };
 
+  const getTitleFromArray = (titleArray: any[] | undefined, fallback: string = ''): string => {
+    if (!titleArray || !Array.isArray(titleArray)) return fallback;
+    const titleObj = titleArray.find(t => t.lang === language) || titleArray.find(t => t.lang === 'en') || titleArray[0];
+    return titleObj?.value || fallback;
+  };
+
+  const getContentSections = () => {
+    if (!termsData?.contenu || !Array.isArray(termsData.contenu)) return [];
+    return termsData.contenu.filter(section => section.type === 'section');
+  };
+
+  const getIntroText = () => {
+    if (!termsData?.contenu || !Array.isArray(termsData.contenu)) return '';
+    const intro = termsData.contenu.find(section => section.type === 'intro');
+    return intro?.text ? getTranslated(intro.text) : '';
+  };
+
   const sections = [
     {
       id: "acceptance",
@@ -81,7 +98,7 @@ const TermsOfService = () => {
               <FileText className="w-10 h-10 text-primary" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              {getTranslated(termsData?.titre, t("terms.title"))}
+              {getTitleFromArray(termsData?.titre, t("terms.title"))}
             </h1>
             <p className="text-xl text-muted-foreground mb-4">
               {t("terms.subtitle")}
@@ -99,7 +116,7 @@ const TermsOfService = () => {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Introduction */}
-          {getTranslated(termsData?.contenu) && (
+          {getIntroText() && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -107,12 +124,12 @@ const TermsOfService = () => {
               className="mb-12 p-8 bg-card border border-border rounded-2xl"
             >
               <div className="text-muted-foreground leading-relaxed whitespace-pre-line">
-                {getTranslated(termsData?.contenu)}
+                {getIntroText()}
               </div>
             </motion.div>
           )}
           
-          {!getTranslated(termsData?.contenu) && (
+          {!getIntroText() && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -126,31 +143,52 @@ const TermsOfService = () => {
             </motion.div>
           )}
 
-          {/* Main Sections */}
-          <div className="space-y-8">
-            {sections.map((section, index) => (
-              <motion.div
-                key={index}
-                id={section.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 * index }}
-                className="p-8 bg-card border border-border rounded-2xl hover:border-primary/50 transition-colors scroll-mt-24"
-              >
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <section.icon className="w-6 h-6 text-primary" />
-                  </div>
+          {/* Main Sections from API */}
+          {getContentSections().length > 0 ? (
+            <div className="space-y-8">
+              {getContentSections().map((section, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.1 * index }}
+                  className="p-8 bg-card border border-border rounded-2xl hover:border-primary/50 transition-colors scroll-mt-24"
+                >
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold mb-3">{section.title}</h3>
+                    <h3 className="text-xl font-bold mb-3">{getTranslated(section.titre)}</h3>
                     <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-                      {section.content}
+                      {getTranslated(section.paragraphe)}
                     </p>
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {sections.map((section, index) => (
+                <motion.div
+                  key={index}
+                  id={section.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.1 * index }}
+                  className="p-8 bg-card border border-border rounded-2xl hover:border-primary/50 transition-colors scroll-mt-24"
+                >
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <section.icon className="w-6 h-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold mb-3">{section.title}</h3>
+                      <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+                        {section.content}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
 
           {/* Additional Terms */}
           <motion.div
