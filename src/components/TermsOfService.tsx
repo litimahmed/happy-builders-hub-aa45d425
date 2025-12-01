@@ -7,7 +7,7 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, FileText, Scale, Shield, AlertCircle } from "lucide-react";
+import { ArrowRight, FileText, Scale, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "@/contexts/TranslationContext";
 
@@ -21,26 +21,29 @@ const TermsOfService = () => {
   // An array of terms features to be displayed in the section.
   const termsFeatures = [
     {
+      id: "acceptance",
       icon: FileText,
       title: t("terms.acceptance.title"),
       description: t("terms.acceptance.content")
     },
     {
+      id: "user-rights",
       icon: Scale,
       title: t("terms.userRights.title"),
       description: t("terms.userRights.content")
     },
     {
+      id: "limitations",
       icon: Shield,
       title: t("terms.limitations.title"),
       description: t("terms.limitations.content")
-    },
-    {
-      icon: AlertCircle,
-      title: t("terms.termination.title"),
-      description: t("terms.termination.content")
     }
   ];
+  
+  const truncateText = (text: string, maxLength: number = 120) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength).trim() + "...";
+  };
   
   return (
     <section id="terms" className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-background">
@@ -76,7 +79,7 @@ const TermsOfService = () => {
         </motion.div>
 
         {/* Grid of terms feature cards. */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div className="grid md:grid-cols-3 gap-6 mb-16">
           {termsFeatures.map((feature, index) => (
             <motion.div
               key={index}
@@ -87,16 +90,25 @@ const TermsOfService = () => {
               className="group"
             >
               {/* Animated card with hover effects. */}
-              <div className="relative p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-xl h-full">
+              <div className="relative p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-xl h-full flex flex-col">
                 {/* A subtle gradient overlay that appears on hover. */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300" />
                 
-                <div className="relative z-10">
+                <div className="relative z-10 flex flex-col flex-1">
                   <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                     <feature.icon className="w-7 h-7 text-primary" />
                   </div>
                   <h3 className="text-lg font-semibold mb-3">{feature.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-4 flex-1">
+                    {truncateText(feature.description)}
+                  </p>
+                  <Link 
+                    to={`/terms-of-service#${feature.id}`}
+                    className="text-primary text-sm font-medium hover:underline inline-flex items-center gap-1"
+                  >
+                    {t("terms.continueReading") || "Continue reading"}
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
                 </div>
               </div>
             </motion.div>
