@@ -35,9 +35,18 @@ const PartnerDetail = () => {
     if (!path) return '/placeholder.svg';
     if (path.startsWith('http')) return path;
     const BASE_URL = import.meta.env.VITE_DJANGO_API_URL || 'http://127.0.0.1:8000';
-    const cleanBase = BASE_URL.replace('/api', '');
+    const cleanBase = BASE_URL.replace('/api', '').replace(/\/$/, '');
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
     return `${cleanBase}${cleanPath}`;
+  };
+
+  const getExternalLinksTitle = (): string => {
+    const titles = {
+      en: 'External Links',
+      fr: 'Liens Externes',
+      ar: 'روابط خارجية'
+    };
+    return titles[language as keyof typeof titles] || titles.en;
   };
 
     if (isLoading) {
@@ -103,11 +112,6 @@ const PartnerDetail = () => {
                             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">
                                 {getTranslated(partner.nom_partenaire, `Partner ${partnerId}`)}
                             </h1>
-                            {getTranslated(partner.description) && (
-                                <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-2xl">
-                                    {getTranslated(partner.description)}
-                                </p>
-                            )}
 
                             <div className="flex flex-wrap gap-6 pt-4">
                                 {partner.date_creation_entreprise && <div className="flex items-center gap-3">
@@ -255,13 +259,16 @@ const PartnerDetail = () => {
 
                                     {/* External Links */}
                                     {partner.liens_externes && partner.liens_externes.length > 0 && <div className="space-y-4 pt-8">
-                                        <h4 className="font-semibold text-lg">{t('partner.externalLinks') || 'External Links'}</h4>
+                                        <h4 className="font-semibold text-lg">{getExternalLinksTitle()}</h4>
                                         <div className="flex flex-wrap gap-3">
                                             {partner.liens_externes.map((link, index) => (
                                                 <a key={index} href={link.url} target="_blank" rel="noopener noreferrer">
                                                     <Button variant="outline" size="sm" className="gap-2">
                                                         <Globe className="w-4 h-4" />
-                                                        {link.titre}
+                                                        <div className="text-left">
+                                                            <div className="font-medium">{link.titre}</div>
+                                                            <div className="text-xs text-muted-foreground">{link.url.replace(/^https?:\/\//, '').substring(0, 30)}</div>
+                                                        </div>
                                                     </Button>
                                                 </a>
                                             ))}
