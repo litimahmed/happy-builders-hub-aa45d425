@@ -259,14 +259,14 @@ const PartnerDetail = () => {
 
                                     {/* External Links */}
                                     {partner.liens_externes && partner.liens_externes.length > 0 && <div className="space-y-6 pt-8 border-t border-border/50 mt-8">
-                                        <h4 className="text-2xl font-bold">{getExternalLinksTitle()}</h4>
+                                        <h4 className="text-3xl md:text-4xl font-black mb-8">{getExternalLinksTitle()}</h4>
                                         <div className="grid md:grid-cols-3 gap-6">
                                             {partner.liens_externes.map((link, index) => (
                                                 <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="space-y-2 hover:opacity-80 transition-opacity">
-                                                    <div className="mb-3">
-                                                        <span className="font-semibold text-sm uppercase tracking-wider text-primary">{link.titre}</span>
+                                                    <div className="mb-2">
+                                                        <span className="font-medium text-xs uppercase tracking-wide text-muted-foreground">{link.titre}</span>
                                                     </div>
-                                                    <p className="text-muted-foreground leading-relaxed break-all">
+                                                    <p className="text-foreground leading-relaxed break-all font-normal">
                                                         {link.url.replace(/^https?:\/\//, '')}
                                                     </p>
                                                 </a>
