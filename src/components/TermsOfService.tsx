@@ -7,9 +7,10 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, FileText, Scale, Shield } from "lucide-react";
+import { ArrowRight, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "@/contexts/TranslationContext";
+import { useTermsOfService } from "@/hooks/useTermsOfService";
 
 /**
  * @component TermsOfService
@@ -17,6 +18,7 @@ import { useTranslation } from "@/contexts/TranslationContext";
  */
 const TermsOfService = () => {
   const { t, language } = useTranslation();
+  const { data: termsData } = useTermsOfService();
   
   const getText = (key: string) => {
     const texts: Record<string, Record<string, string>> = {
@@ -38,28 +40,53 @@ const TermsOfService = () => {
     };
     return texts[key]?.[language] || texts[key]?.en || "";
   };
+
+  type Language = 'en' | 'fr' | 'ar';
+  type TranslatableField = { fr?: string; ar?: string; en?: string; } | undefined | {};
+
+  const getTranslated = (field: TranslatableField, fallback: string = ''): string => {
+    if (!field || typeof field !== 'object') return fallback;
+    const translated = field[language as Language] || field['en'] || field['fr'] || field['ar'];
+    return translated || fallback;
+  };
+
+  const getContentSections = () => {
+    if (!termsData?.contenu) return [];
+    if (Array.isArray(termsData.contenu)) {
+      return termsData.contenu.filter(section => section.type === 'section').slice(0, 3);
+    }
+    return [];
+  };
+
+  const apiSections = getContentSections();
   
-  // An array of terms features to be displayed in the section.
-  const termsFeatures = [
+  // Fallback sections when no API data
+  const fallbackSections = [
     {
       id: "acceptance",
-      icon: FileText,
       title: t("terms.acceptance.title"),
       description: t("terms.acceptance.content")
     },
     {
       id: "user-rights",
-      icon: Scale,
       title: t("terms.userRights.title"),
       description: t("terms.userRights.content")
     },
     {
       id: "limitations",
-      icon: Shield,
       title: t("terms.limitations.title"),
       description: t("terms.limitations.content")
     }
   ];
+
+  // Use API sections if available, otherwise use fallback
+  const termsFeatures = apiSections.length > 0 
+    ? apiSections.map((section, index) => ({
+        id: `section-${index}`,
+        title: getTranslated(section.titre),
+        description: getTranslated(section.paragraphe)
+      }))
+    : fallbackSections;
   
   const truncateText = (text: string, maxLength: number = 120) => {
     if (text.length <= maxLength) return text;
@@ -101,39 +128,39 @@ const TermsOfService = () => {
 
         {/* Grid of terms feature cards. */}
         <div className="grid md:grid-cols-3 gap-6 mb-16">
-          {termsFeatures.map((feature, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-              className="group"
-            >
-              {/* Animated card with hover effects. */}
-              <div className="relative p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-xl h-full flex flex-col">
-                {/* A subtle gradient overlay that appears on hover. */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300" />
-                
-                <div className="relative z-10 flex flex-col flex-1">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <feature.icon className="w-7 h-7 text-primary" />
+              {termsFeatures.map((feature, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  className="group"
+                >
+                  {/* Animated card with hover effects. */}
+                  <div className="relative p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-xl h-full flex flex-col">
+                    {/* A subtle gradient overlay that appears on hover. */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300" />
+                    
+                    <div className="relative z-10 flex flex-col flex-1">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                        <FileText className="w-7 h-7 text-primary" />
+                      </div>
+                      <h3 className="text-lg font-semibold mb-3">{feature.title}</h3>
+                      <p className="text-muted-foreground text-sm leading-relaxed mb-4 flex-1">
+                        {truncateText(feature.description)}
+                      </p>
+                      <Link 
+                        to={`/terms-of-service#${feature.id}`}
+                        className="text-primary text-sm font-medium hover:underline inline-flex items-center gap-1"
+                      >
+                        {getText("continueReading")}
+                        <ArrowRight className="w-3 h-3" />
+                      </Link>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-semibold mb-3">{feature.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed mb-4 flex-1">
-                    {truncateText(feature.description)}
-                  </p>
-                  <Link 
-                    to={`/terms-of-service#${feature.id}`}
-                    className="text-primary text-sm font-medium hover:underline inline-flex items-center gap-1"
-                  >
-                    {getText("continueReading")}
-                    <ArrowRight className="w-3 h-3" />
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+                </motion.div>
+              ))}
         </div>
 
         {/* Animated call-to-action section to read the full terms of service. */}
