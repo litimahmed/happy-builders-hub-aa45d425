@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Target, Users, Zap, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "@/contexts/TranslationContext";
+import { useAboutUs } from "@/hooks/useAboutUs";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * @component AboutUs
@@ -18,31 +20,34 @@ import { useTranslation } from "@/contexts/TranslationContext";
  */
 const AboutUs = () => {
   // Hook to get the translation function.
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const { data: aboutData, isLoading } = useAboutUs();
+
+  // Helper to get translated value from array-based translations
+  const getTranslated = (field: { lang: string; value: string }[] | undefined): string => {
+    if (!field || !Array.isArray(field)) return '';
+    const entry = field.find(item => item.lang === language) || field.find(item => item.lang === 'fr');
+    return entry?.value || '';
+  };
   
-  // An array of features or values to be displayed in the "About Us" section.
-  const features = [
-    {
-      icon: Target,
-      title: t("about.mission"),
-      description: t("about.missionDesc")
-    },
-    {
-      icon: Zap,
-      title: t("about.innovation"),
-      description: t("about.innovationDesc")
-    },
-    {
-      icon: Users,
-      title: t("about.customer"),
-      description: t("about.customerDesc")
-    },
-    {
-      icon: Award,
-      title: t("about.excellence"),
-      description: t("about.excellenceDesc")
-    }
+  // Icons for each feature card
+  const icons = [Target, Zap, Award, Users];
+  
+  // Fallback features using translation keys
+  const fallbackFeatures = [
+    { icon: Target, title: t("about.mission"), description: t("about.missionDesc") },
+    { icon: Zap, title: t("about.innovation"), description: t("about.innovationDesc") },
+    { icon: Award, title: t("about.excellence"), description: t("about.excellenceDesc") },
+    { icon: Users, title: t("about.customer"), description: t("about.customerDesc") }
   ];
+
+  // Build dynamic features from API data
+  const features = aboutData ? [
+    { icon: Target, title: t("about.mission"), description: getTranslated(aboutData.mission) },
+    { icon: Zap, title: t("about.innovation"), description: getTranslated(aboutData.vision) },
+    { icon: Award, title: t("about.excellence"), description: getTranslated(aboutData.valeurs) },
+    { icon: Users, title: t("about.customer"), description: getTranslated(aboutData.qui_nous_servons) }
+  ] : fallbackFeatures;
   
   return (
     <section id="about" className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
