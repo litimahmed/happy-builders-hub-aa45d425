@@ -30,40 +30,29 @@ const AboutUs = () => {
     return text.substring(0, maxLength).trim() + '...';
   };
 
-  // Card configurations with correct order: Mission, Vision, Values, Who We Serve
-  // Using aboutPage translation keys that exist in TranslationContext
-  const cardConfig = [
+  // Static card configurations with titles and API data fields
+  const features = [
     { 
       icon: Target, 
-      titleKey: "aboutPage.missionTitle",
-      dataField: 'mission' as const
+      title: "Notre Mission",
+      description: aboutData ? truncateText(getTranslated(aboutData.mission)) : ''
     },
     { 
       icon: Eye, 
-      titleKey: "aboutPage.visionTitle",
-      dataField: 'vision' as const
+      title: "Notre Vision",
+      description: aboutData ? truncateText(getTranslated(aboutData.vision)) : ''
     },
     { 
       icon: Heart, 
-      titleKey: "aboutPage.valuesTitle",
-      dataField: 'valeurs' as const
+      title: "Nos Valeurs",
+      description: aboutData ? truncateText(getTranslated(aboutData.valeurs)) : ''
     },
     { 
       icon: Users, 
-      titleKey: "aboutPage.whoWeServeTitle",
-      dataField: 'qui_nous_servons' as const
+      title: "Qui Nous Servons",
+      description: aboutData ? truncateText(getTranslated(aboutData.qui_nous_servons)) : ''
     }
   ];
-
-  // Build features from API data with fallbacks
-  const features = cardConfig.map(config => {
-    const apiDescription = aboutData ? getTranslated(aboutData[config.dataField]) : '';
-    return {
-      icon: config.icon,
-      title: t(config.titleKey),
-      description: apiDescription ? truncateText(apiDescription) : ''
-    };
-  });
 
   if (isLoading) {
     return (
