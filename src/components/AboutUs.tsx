@@ -24,10 +24,17 @@ const AboutUs = () => {
     return entry?.value || '';
   };
 
+  const MAX_LENGTH = 100;
+
+  // Check if text exceeds max length
+  const isTextTruncated = (text: string): boolean => {
+    return text && text.length > MAX_LENGTH;
+  };
+
   // Truncate text to a maximum length for preview
-  const truncateText = (text: string, maxLength: number = 120): string => {
-    if (!text || text.length <= maxLength) return text;
-    return text.substring(0, maxLength).trim() + '...';
+  const truncateText = (text: string): string => {
+    if (!text || text.length <= MAX_LENGTH) return text;
+    return text.substring(0, MAX_LENGTH).trim() + '...';
   };
 
   // Static card configurations with titles and API data fields
@@ -35,22 +42,22 @@ const AboutUs = () => {
     { 
       icon: Target, 
       title: "Notre Mission",
-      description: aboutData ? truncateText(getTranslated(aboutData.mission)) : ''
+      fullText: aboutData ? getTranslated(aboutData.mission) : ''
     },
     { 
       icon: Eye, 
       title: "Notre Vision",
-      description: aboutData ? truncateText(getTranslated(aboutData.vision)) : ''
+      fullText: aboutData ? getTranslated(aboutData.vision) : ''
     },
     { 
       icon: Heart, 
       title: "Nos Valeurs",
-      description: aboutData ? truncateText(getTranslated(aboutData.valeurs)) : ''
+      fullText: aboutData ? getTranslated(aboutData.valeurs) : ''
     },
     { 
       icon: Users, 
       title: "Qui Nous Servons",
-      description: aboutData ? truncateText(getTranslated(aboutData.qui_nous_servons)) : ''
+      fullText: aboutData ? getTranslated(aboutData.qui_nous_servons) : ''
     }
   ];
 
@@ -128,7 +135,14 @@ const AboutUs = () => {
                     <feature.icon className="w-6 h-6 text-primary" />
                   </div>
                   <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {truncateText(feature.fullText)}
+                    {isTextTruncated(feature.fullText) && (
+                      <Link to="/about-us" className="text-primary hover:underline ml-1 font-medium">
+                        En savoir plus
+                      </Link>
+                    )}
+                  </p>
                 </div>
               </div>
             </motion.div>
