@@ -5,21 +5,15 @@
  * The component is animated with Framer Motion for a dynamic and engaging user experience.
  */
 
-// Import necessary libraries and components.
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Target, Users, Zap, Award } from "lucide-react";
+import { ArrowRight, Target, Eye, Heart, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "@/contexts/TranslationContext";
 import { useAboutUs } from "@/hooks/useAboutUs";
 import { Skeleton } from "@/components/ui/skeleton";
 
-/**
- * @component AboutUs
- * @description The main "About Us" section component.
- */
 const AboutUs = () => {
-  // Hook to get the translation function.
   const { t, language } = useTranslation();
   const { data: aboutData, isLoading } = useAboutUs();
 
@@ -29,33 +23,75 @@ const AboutUs = () => {
     const entry = field.find(item => item.lang === language) || field.find(item => item.lang === 'fr');
     return entry?.value || '';
   };
-  
-  // Icons for each feature card
-  const icons = [Target, Zap, Award, Users];
-  
-  // Fallback features using translation keys
-  const fallbackFeatures = [
-    { icon: Target, title: t("about.mission"), description: t("about.missionDesc") },
-    { icon: Zap, title: t("about.innovation"), description: t("about.innovationDesc") },
-    { icon: Award, title: t("about.excellence"), description: t("about.excellenceDesc") },
-    { icon: Users, title: t("about.customer"), description: t("about.customerDesc") }
+
+  // Truncate text to a maximum length for preview
+  const truncateText = (text: string, maxLength: number = 120): string => {
+    if (!text || text.length <= maxLength) return text;
+    return text.substring(0, maxLength).trim() + '...';
+  };
+
+  // Card configurations with correct order: Mission, Vision, Values, Who We Serve
+  const cardConfig = [
+    { 
+      icon: Target, 
+      titleKey: "about.mission",
+      dataField: 'mission' as const
+    },
+    { 
+      icon: Eye, 
+      titleKey: "about.vision",
+      dataField: 'vision' as const
+    },
+    { 
+      icon: Heart, 
+      titleKey: "about.values",
+      dataField: 'valeurs' as const
+    },
+    { 
+      icon: Users, 
+      titleKey: "about.whoWeServe",
+      dataField: 'qui_nous_servons' as const
+    }
   ];
 
-  // Build dynamic features from API data
-  const features = aboutData ? [
-    { icon: Target, title: t("about.mission"), description: getTranslated(aboutData.mission) },
-    { icon: Zap, title: t("about.innovation"), description: getTranslated(aboutData.vision) },
-    { icon: Award, title: t("about.excellence"), description: getTranslated(aboutData.valeurs) },
-    { icon: Users, title: t("about.customer"), description: getTranslated(aboutData.qui_nous_servons) }
-  ] : fallbackFeatures;
-  
+  // Build features from API data with fallbacks
+  const features = cardConfig.map(config => ({
+    icon: config.icon,
+    title: t(config.titleKey),
+    description: aboutData 
+      ? truncateText(getTranslated(aboutData[config.dataField]))
+      : t(`${config.titleKey}Desc`)
+  }));
+
+  if (isLoading) {
+    return (
+      <section id="about" className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/20 to-background" />
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="text-center mb-16">
+            <Skeleton className="h-8 w-32 mx-auto mb-4" />
+            <Skeleton className="h-12 w-64 mx-auto mb-6" />
+            <Skeleton className="h-6 w-96 mx-auto" />
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="p-6 rounded-2xl bg-card border border-border">
+                <Skeleton className="w-12 h-12 rounded-xl mb-4" />
+                <Skeleton className="h-6 w-32 mb-2" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section id="about" className="py-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* A subtle gradient background to enhance the visual appeal. */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/20 to-background" />
       
       <div className="max-w-7xl mx-auto relative z-10">
-        {/* Animated section header. */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -63,7 +99,6 @@ const AboutUs = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          {/* Animated tagline. */}
           <motion.div
             initial={{ scale: 0 }}
             whileInView={{ scale: 1 }}
@@ -84,7 +119,6 @@ const AboutUs = () => {
           </p>
         </motion.div>
 
-        {/* Grid of feature cards. */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {features.map((feature, index) => (
             <motion.div
@@ -95,9 +129,7 @@ const AboutUs = () => {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="group"
             >
-              {/* Animated card with hover effects. */}
               <div className="relative p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg h-full">
-                {/* A subtle gradient overlay that appears on hover. */}
                 <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-5 rounded-2xl transition-opacity duration-300" />
                 
                 <div className="relative z-10">
@@ -112,7 +144,6 @@ const AboutUs = () => {
           ))}
         </div>
 
-        {/* Animated call-to-action button to learn more. */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
